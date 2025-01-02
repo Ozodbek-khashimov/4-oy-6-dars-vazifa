@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "title": "Updated Blog Title",
+    "content": "Updated content for Blog 1",
+    "tags": [
+      "updatedTag1",
+      "updatedTag2"
+    ],
+    "comments": []
+  }
+]

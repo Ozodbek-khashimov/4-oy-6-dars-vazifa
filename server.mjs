@@ -1,15 +1,33 @@
 import express from "express";
+import fs from "fs";
 
 const app = express();
 
 const port = 3000;
 
-let users = [];
-let blogs = [];
+// let users = [];
+// let blogs = [];
+
+const usersDataPath = './users.json';
+const blogDataPath = './blog.json';
 
 app.use(express.json());
 
+const readData = (filePath) => {
+    if (!fs.existsSync(filePath)) {
+        fs.writeFileSync(filePath, JSON.stringify([]));
+    }
+    const data = fs.readFileSync(filePath);
+    return JSON.parse(data);
+};
+
+const writeData = (filePath, data) => {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+};
+
+
 app.post("/users/register", (req, res) => {
+    const users = readData(usersDataPath);
     const { username, password, fullname, age, email, gender } = req.body;
 
     if (!username || username.length < 3)
@@ -35,10 +53,12 @@ app.post("/users/register", (req, res) => {
         gender
     };
     users.push(newUser);
+    writeData(usersDataPath, users);
     res.status(201).json({ message: "Foydalanuvchi muvaffaqiyatli qo'shildi!", user: newUser });
 });
 
 app.get("/users/profile/:identifier", (req, res) => {
+    const users = readData(usersDataPath);
     const { identifier } = req.params;
 
     const user = users.find((user) => user.username === identifier || user.email === identifier);
@@ -49,6 +69,7 @@ app.get("/users/profile/:identifier", (req, res) => {
 });
 
 app.put("/users/profile/:identifier", (req, res) => {
+    const users = readData(usersDataPath);
     const { identifier } = req.params;
     const { fullname, age, gender } = req.body;
 
@@ -60,10 +81,13 @@ app.put("/users/profile/:identifier", (req, res) => {
     if (age && age >= 10) user.age = age;
     if (gender === "male" || gender === "female") user.gender = gender;
 
+    writeData(usersDataPath, users);
+
     res.status(200).json({ message: "Profil muvaffaqiyatli yangilandi!" });
 });
 
 app.delete("/users/profile/:identifier", (req, res) => {
+    const users = readData(usersDataPath);
     const { identifier } = req.params;
 
     const userIndex = users.findIndex((user) => user.username === identifier || user.email === identifier);
@@ -71,10 +95,12 @@ app.delete("/users/profile/:identifier", (req, res) => {
     if (userIndex === -1) return res.status(404).json({ error: "Foydalanuvchi topilmadi." });
 
     users.splice(userIndex, 1);
+    writeData(usersDataPath, users);
     res.status(200).json({ message: "Profil muvaffaqiyatli o'chirildi!" });
 });
 
 app.post("/blogs", (req, res) => {
+    const blogs = readData(blogDataPath);
     const { title, content, tags } = req.body;
 
     if (!title || !content) return res.status(400).json({ error: "Title va content kiritilishi shart." });
@@ -87,14 +113,17 @@ app.post("/blogs", (req, res) => {
         comments: [],
     };
     blogs.push(newBlog);
+    writeData(blogDataPath, blogs);
     res.status(201).json({ message: "Blog muvaffaqiyatli yaratildi!", blog: newBlog });
 });
 
 app.get("/blogs", (req, res) => {
+    const blogs = readData(blogDataPath);
     res.status(200).json(blogs);
 });
 
 app.put("/blogs/:id", (req, res) => {
+    const blogs = readData(blogDataPath);
     const { id } = req.params;
     const { title, content, tags } = req.body;
 
@@ -106,10 +135,14 @@ app.put("/blogs/:id", (req, res) => {
     if (content) blog.content = content;
     if (tags) blog.tags = tags;
 
+    
+    writeData(blogDataPath, blogs);
+
     res.status(200).json({ message: "Blog muvaffaqiyatli yangilandi!" });
 });
 
 app.delete("/blogs/:id", (req, res) => {
+    const blogs = readData(blogDataPath);
     const { id } = req.params;
 
     const blogIndex = blogs.findIndex((blog) => blog.id == id);
@@ -117,6 +150,7 @@ app.delete("/blogs/:id", (req, res) => {
     if (blogIndex === -1) return res.status(404).json({ error: "Blog topilmadi." });
 
     blogs.splice(blogIndex, 1);
+    writeData(blogDataPath, blogs);
     res.status(200).json({ message: "Blog muvaffaqiyatli o'chirildi!" });
 });
 
